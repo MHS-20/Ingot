@@ -1,6 +1,6 @@
 # Ingot
 
-Eleven data structures and concurrency primitives in C11, written to be read.
+Twelve data structures and concurrency primitives in C11, written to be read.
 
 Every one of these exists inside libraries you already use — Redis's sorted
 set, Java's `ThreadPoolExecutor`, nginx's event loop, the free list under an
@@ -12,12 +12,13 @@ This is a reference implementation, not a library to depend on.
 Build each of these yourself first, then read this to compare 
 against a version that had the luxury of hindsight.
 
-## The eleven
+## The twelve
 
 | # | Module | What it is | The idea it exists for |
 |---|---|---|---|
 | 1 | `htab` | Chained hash table, intrusive | The link lives *in* the element, so insert allocates nothing and cannot fail |
 | 2 | `omap` | Open addressing + incremental resize | Amortising the rehash so no single call is O(n) |
+| 2b | `heap` | Array-backed binary min-heap | A partial order is cheaper than a total one — and a tree made of index arithmetic, with no pointers at all |
 | 3 | `skiplist` | Probabilistic ordered structure | A coin flip replacing rebalancing — and `span`, which buys O(log n) rank |
 | 4 | `zset` | Sorted set = skip list + hash table | One entry in two structures at once; O(1) score *and* O(log n) rank |
 | 5 | `lru` | O(1) cache | Hash table for lookup, intrusive list for recency; eviction that cannot fail |
@@ -31,6 +32,13 @@ against a version that had the luxury of hindsight.
 They are ordered as a curriculum, not as a dependency graph. The real
 dependencies are few: `zset` needs `skiplist` and `htab`, `lru` needs `htab`
 and `list.h`, and nothing else needs anything.
+
+`heap` is numbered 2b rather than 3 because it was added after the rest and
+renumbering would have invalidated every "day N" reference in the sources. It
+depends on nothing, and it sits where it does deliberately: modules 3 and 4
+are one long argument about maintaining a total order, and the heap is the
+structure that asks whether a total order was ever needed. Reading it
+immediately before `skiplist` makes that a contrast rather than a claim.
 
 ## Conventions
 
